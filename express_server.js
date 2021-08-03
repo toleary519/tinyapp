@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
+const morgan = require('morgan')
 const bodyParser = require("body-parser");
 app.use(express.urlencoded({extended: true}));
 
@@ -39,6 +40,18 @@ app.post("/urls", (req, res) => {
   urlDatabase[shortURL] = req.body.longURL  // Log the POST request body to the console
   res.redirect(`/urls/${shortURL}`)
 });
+
+// edit / POST / urls/shortURL
+app.post("/urls/:shortURL/edit", (req, res) => {
+  const shortURL = req.params.shortURL;
+  const longURL = req.body.longURL;
+  console.log(longURL);
+  console.log("req body", req.body);
+  urlDatabase[shortURL] = longURL;
+
+  res.redirect('/urls');
+
+})
 
 app.post('/urls/:shortURL/delete', (req, res) => {
   const shortURL = req.params.shortURL
