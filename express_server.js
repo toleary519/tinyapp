@@ -35,7 +35,7 @@ const usersDatabase = {
 
 //homepage
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.render("homepage");
 });
 
 //urls
@@ -115,12 +115,12 @@ app.post("/register", (req, res) => {
   
   for (const userId in usersDatabase) {
     if (usersDatabase[userId].email === req.body.email) {
-      res.redirect("/register");
+      res.redirect("/");
       return;
     }
   }
   if (req.body.email.length === 0 || req.body.password.length === 0) {
-    res.redirect("/register");
+    res.redirect("/");
     return; 
   }
   const userId = generateRandomString(6)
@@ -136,7 +136,7 @@ res.redirect(`/urls`)
 app.post("/logout", (req, res) => {
   // const username = req.body.username
   res.clearCookie("id") 
-  res.redirect(`/login`)
+  res.redirect(`/`)
 });
  
 // edit / POST / urls/shortURL
