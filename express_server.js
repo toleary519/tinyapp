@@ -20,7 +20,7 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 // user database
-const usersDatabase = [{ 
+const usersDatabase = { 
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
@@ -31,7 +31,7 @@ const usersDatabase = [{
     email: "user2@example.com", 
     password: "dishwasher-funk"
   }
-}]
+}
 
 //homepage
 app.get("/", (req, res) => {
@@ -94,30 +94,32 @@ app.post("/login", (req, res) => {
 // post register
 app.post("/register", (req, res) => {
   
+  for (const userId in usersDatabase) {
+    if (usersDatabase[userId].email === req.body.email) {
+      res.redirect("/register");
+      return;
+    }
+  }
+  if (req.body.email.length === 0 || req.body.password.length === 0) {
+    res.redirect("/register");
+    return; 
+  }
   const userId = generateRandomString(6)
   console.log("req.body", req.body)
   usersDatabase[userId] = { id: userId, email: req.body.email, password: req.body.password };
   
-  for (user of usersDatabase) {
-    console.log("userdata.email", usersDatabase[req.cookies["id"].email]);
-    if (usersDatabase[req.cookies["id"].email] === req.body.email) {
-      // console.log("userdata.email", usersDatabase.email);
-      res.redirect("/error")
-    }
-  }
-
 res.cookie("id", userId)
-console.log(usersDatabase)
+// console.log(usersDatabase)
 res.redirect(`/urls`)
 });
 
 // post logout
 app.post("/logout", (req, res) => {
   // const username = req.body.username
-  res.clearCookie(usersDatabase[req.cookies["id"].email]) 
+  res.clearCookie("id") 
   res.redirect(`/urls`)
 });
-
+ 
 // edit / POST / urls/shortURL
 app.post("/urls/:shortURL/edit", (req, res) => {
   const shortURL = req.params.shortURL;
