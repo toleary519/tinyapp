@@ -24,7 +24,7 @@ const usersDatabase = {
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
+    password: "test"
   },
  "user2RandomID": {
     id: "user2RandomID", 
@@ -47,7 +47,8 @@ app.get("/urls", (req, res) => {
   } 
   
   
-  const templateVars = { urls: urlDatabase, username: usersDatabase[req.cookies["id"]].email};
+  const templateVars = { urls: urlDatabase, username: usersDatabase[req.cookies["id"]].email };
+  // username: usersDatabase[req.cookies["id"]].email
   //, username: res.clearCookie["id"]
   // console.log("req.cook.id:", usersDatabase[req.cookies["id"]].email);
   // console.log("template vars", templateVars);
@@ -58,6 +59,11 @@ app.get("/urls", (req, res) => {
 app.get("/register", (req, res) => {
   const templateVars = {username: req.cookies["username"]}; 
   res.render("registration", templateVars);
+});
+
+//login
+app.get("/login", (req, res) => {
+  res.render("login");
 });
 
 //new urls
@@ -85,10 +91,23 @@ app.post("/urls", (req, res) => {
 
 // post login
 app.post("/login", (req, res) => {
-  const username = req.body.username
-  res.cookie('username', username) 
+  
+  for (const userId in usersDatabase) {
+    if (usersDatabase[userId].email === req.body.email && usersDatabase[userId].password === req.body.password) {
+      console.log("userDB:ID:", usersDatabase[userId]["id"]);
+      res.cookie("id", usersDatabase[userId]["id"]);
+      res.redirect(`/urls`)
+      return;
+    }
+  }
+  // if (req.body.email.length === 0 || req.body.password.length === 0) {
+  //   res.redirect("/register");
+  //   return; 
+  // }
+  
+  // const username = req.body.username
+  // res.cookie('username', username) 
   // console.log(username);
-  res.redirect(`/urls`)
 });
 
 // post register
@@ -117,7 +136,7 @@ res.redirect(`/urls`)
 app.post("/logout", (req, res) => {
   // const username = req.body.username
   res.clearCookie("id") 
-  res.redirect(`/urls`)
+  res.redirect(`/login`)
 });
  
 // edit / POST / urls/shortURL
