@@ -11,11 +11,8 @@
       </div>
     </div>
     <% if(!username){ %>
-      <form method="POST" action="/login">
-        <label> Login </label>
-        <input name="username" value=""/>
-        <button type="submit">Submit</button>
-      </form>
+      <a class="nav-item nav-link" href="/login">Login</a>
+      <a class="nav-item nav-link" href="/register">Register</a>
       <% } else{ %>
       <a class="nav-item nav-link"><%= username %></a>
       <form method="POST" action="/logout">
@@ -24,3 +21,4 @@
     <% } %>
   </nav>
 </header>
+

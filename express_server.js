@@ -41,13 +41,10 @@ app.get("/", (req, res) => {
 //urls
 app.get("/urls", (req, res) => {
   
-  if (!usersDatabase[req.cookies["id"]]) {
-    res.redirect("/register");
-    return
-  } 
+  const username = usersDatabase[req.cookies["id"]].email;
   
   
-  const templateVars = { urls: urlDatabase, username: usersDatabase[req.cookies["id"]].email };
+  const templateVars = { urls: urlDatabase, username: username};
   // username: usersDatabase[req.cookies["id"]].email
   //, username: res.clearCookie["id"]
   // console.log("req.cook.id:", usersDatabase[req.cookies["id"]].email);
@@ -63,11 +60,17 @@ app.get("/register", (req, res) => {
 
 //login
 app.get("/login", (req, res) => {
-  res.render("login");
+  const templateVars = {username: req.cookies["username"]}; 
+  res.render("login", templateVars);
 });
 
 //new urls
 app.get("/urls/new", (req, res) => {
+
+  if (!usersDatabase[req.cookies["id"]]) {
+    res.redirect("/register");
+    return
+  } 
   const templateVars = {username: usersDatabase[req.cookies["id"]].email};
   res.render("urls_new", templateVars);
 });
@@ -91,10 +94,15 @@ app.post("/urls", (req, res) => {
 
 // post login
 app.post("/login", (req, res) => {
-  
+
+  const username = req.body.email
+  console.log("req.body.email:", username);
+  const password = req.body.password
+  console.log("req.body.password:", password);
+
+
   for (const userId in usersDatabase) {
-    if (usersDatabase[userId].email === req.body.email && usersDatabase[userId].password === req.body.password) {
-      console.log("userDB:ID:", usersDatabase[userId]["id"]);
+    if (usersDatabase[userId].email === username && usersDatabase[userId].password === password) {
       res.cookie("id", usersDatabase[userId]["id"]);
       res.redirect(`/urls`)
       return;
@@ -113,23 +121,29 @@ app.post("/login", (req, res) => {
 // post register
 app.post("/register", (req, res) => {
   
+
+
   for (const userId in usersDatabase) {
     if (usersDatabase[userId].email === req.body.email) {
-      res.redirect("/");
+      res.redirect("/register");
       return;
     }
   }
   if (req.body.email.length === 0 || req.body.password.length === 0) {
-    res.redirect("/");
+    res.redirect("/register");
     return; 
   }
-  const userId = generateRandomString(6)
-  console.log("req.body", req.body)
-  usersDatabase[userId] = { id: userId, email: req.body.email, password: req.body.password };
   
-res.cookie("id", userId)
-// console.log(usersDatabase)
-res.redirect(`/urls`)
+  const userId = generateRandomString(6)
+  const email = req.body.email 
+  console.log("regist-email:", email);
+  const password = req.body.password 
+
+  usersDatabase[userId] = { id: userId, email: email, password: password };
+  
+res.cookie(usersDatabase[userId]["id"], email);
+console.log("cookie:", usersDatabase[userId]["id"]);
+res.redirect(`/login`)
 });
 
 // post logout
