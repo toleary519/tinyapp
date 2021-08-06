@@ -6,10 +6,15 @@ const PORT = 8080; // default port 8080
 
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser')
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser())
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2']
+}))
 app.set("view engine", "ejs");
 
 // string generator
@@ -52,8 +57,8 @@ app.get("/", (req, res) => {
 //urls
 app.get("/urls", (req, res) => {
   
-  const userId = req.cookies["id"];
-  console.log("req.cookies", req.cookies);
+  const userId = req.session.id;
+  // console.log("req.cookies", req.cookies);
   if (!userId) {
     res.redirect("/register");
     return
@@ -91,7 +96,7 @@ const username = usersDatabase[req.cookies["id"]]
 app.get("/urls/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL]
   const shortURL = req.params.shortURL
-  const username = req.cookies["username"]
+  const username = req.session.id
   const templateVars = { shortURL: shortURL, longURL: longURL, username: username};
   res.render("urls_show", templateVars);
 });
@@ -112,12 +117,15 @@ app.post("/login", (req, res) => {
   const email = req.body.email 
   console.log("email", req.body);
   const password = req.body.password 
+  const hashedPassword = bcrypt.hashSync(password, 10)
   const user = getUserByEmail(email);
-  // console.log("login user:", user);
-  if (!user || !bcrypt.compareSync(password, user.password)) {
+  console.log("user", user);
+  console.log("login user.id:", user.id);
+  console.log("user.password", user.password);
+  if (!user || !bcrypt.compareSync(password, hashedPassword)) {
     return res.status(400).send("invalid login <a href='/login'> try again</a>");
   }
-  res.cookie("id", user.id);
+  req.session.id = user.id;
   res.redirect('/urls');
 
 });
@@ -142,7 +150,7 @@ app.post("/register", (req, res) => {
 
   usersDatabase[userId] = { id: userId, email: email, password: hashedPassword };
   
-res.cookie("id", userId);
+req.session.id = userId;
 console.log("user object:", usersDatabase[userId]);
 console.log("cookie:", userId, email );
 res.redirect(`/urls`)
