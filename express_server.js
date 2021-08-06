@@ -6,6 +6,7 @@ const PORT = 8080; // default port 8080
 
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser')
+const bcrypt = require('bcrypt');
 
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser())
@@ -111,10 +112,9 @@ app.post("/login", (req, res) => {
   const email = req.body.email 
   console.log("email", req.body);
   const password = req.body.password 
-
   const user = getUserByEmail(email);
-  console.log(user);
-  if (!user || user.password !== password){
+  // console.log("login user:", user);
+  if (!user || !bcrypt.compareSync(password, user.password)) {
     return res.status(400).send("invalid login <a href='/login'> try again</a>");
   }
   res.cookie("id", user.id);
@@ -126,7 +126,7 @@ app.post("/login", (req, res) => {
 app.post("/register", (req, res) => {
   const email = req.body.email 
   const password = req.body.password 
-
+  const hashedPassword = bcrypt.hashSync(password, 10)
   if (getUserByEmail(email)) {
     res.status(400).send("Email taken. <a href='/register'> try again </> ");
   }
@@ -140,9 +140,10 @@ app.post("/register", (req, res) => {
   const user = {userId, email, password} //bcrypt before pass
   usersDatabase[userId] = user;
 
-  usersDatabase[userId] = { id: userId, email: email, password: password };
+  usersDatabase[userId] = { id: userId, email: email, password: hashedPassword };
   
 res.cookie("id", userId);
+console.log("user object:", usersDatabase[userId]);
 console.log("cookie:", userId, email );
 res.redirect(`/urls`)
 });
