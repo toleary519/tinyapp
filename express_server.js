@@ -33,6 +33,16 @@ const usersDatabase = {
   }
 }
 
+// finder fn
+const getUserByEmail = function(email) {
+  const users = Object.values(usersDatabase);
+  for (const user of users) {
+    if(user.email === email) {
+      return user;
+    }
+  }
+}
+
 //homepage
 app.get("/", (req, res) => {
   res.render("homepage");
@@ -41,18 +51,14 @@ app.get("/", (req, res) => {
 //urls
 app.get("/urls", (req, res) => {
   
-  const username = usersDatabase[req.cookies["id"]];
-  
-  if (!username) {
+  const userId = req.cookies["id"];
+  console.log("req.cookies", req.cookies);
+  if (!userId) {
     res.redirect("/register");
     return
   } 
   
-  const templateVars = { urls: urlDatabase, username: username.email};
-  // username: usersDatabase[req.cookies["id"]].email
-  //, username: res.clearCookie["id"]
-  // console.log("req.cook.id:", usersDatabase[req.cookies["id"]].email);
-  // console.log("template vars", templateVars);
+  const templateVars = { urls: urlDatabase, username: usersDatabase[userId].email};
   res.render("urls_index", templateVars);
 });
 
@@ -102,55 +108,43 @@ app.post("/urls", (req, res) => {
 // post login
 app.post("/login", (req, res) => {
 
-  const username = req.body.email
-  console.log("req.body.email:", username);
-  const password = req.body.password
-  console.log("req.body.password:", password);
+  const email = req.body.email 
+  console.log("email", req.body);
+  const password = req.body.password 
 
-
-  for (const userId in usersDatabase) {
-    if (usersDatabase[userId].email === username && usersDatabase[userId].password === password) {
-      res.cookie("id", usersDatabase[userId]["id"]);
-      res.redirect(`/urls`)
-      return;
-    }
+  const user = getUserByEmail(email);
+  console.log(user);
+  if (!user || user.password !== password){
+    return res.status(400).send("invalid login <a href='/login'> try again</a>");
   }
-  // if (req.body.email.length === 0 || req.body.password.length === 0) {
-  //   res.redirect("/register");
-  //   return; 
-  // }
-  
-  // const username = req.body.username
-  // res.cookie('username', username) 
-  // console.log(username);
+  res.cookie("id", user.id);
+  res.redirect('/urls');
+
 });
 
 // post register
 app.post("/register", (req, res) => {
-  
+  const email = req.body.email 
+  const password = req.body.password 
 
-
-  for (const userId in usersDatabase) {
-    if (usersDatabase[userId].email === req.body.email) {
-      res.redirect("/register");
-      return;
-    }
+  if (getUserByEmail(email)) {
+    res.status(400).send("Email taken. <a href='/register'> try again </> ");
   }
-  if (req.body.email.length === 0 || req.body.password.length === 0) {
-    res.redirect("/register");
+
+  if (!email || !password) {
+    res.status(400).send("Missing email or Password. <a href='/register'> try again </> ");
     return; 
   }
   
   const userId = generateRandomString(6)
-  const email = req.body.email 
-  console.log("regist-email:", email);
-  const password = req.body.password 
+  const user = {userId, email, password} //bcrypt before pass
+  usersDatabase[userId] = user;
 
   usersDatabase[userId] = { id: userId, email: email, password: password };
   
-res.cookie(usersDatabase[userId]["id"], email);
-console.log("cookie:", usersDatabase[userId]["id"]);
-res.redirect(`/login`)
+res.cookie("id", userId);
+console.log("cookie:", userId, email );
+res.redirect(`/urls`)
 });
 
 // post logout
