@@ -22,8 +22,14 @@ const generateRandomString = () => Math.random().toString(32).substr(2,6);
 
 //starting url database
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
+    userId: "userRandomID"
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userId: "user2RandomID"
+  }
 };
 // user database
 const usersDatabase = { 
@@ -40,7 +46,7 @@ const usersDatabase = {
 }
 
 // finder fn
-const getUserByEmail = require('./helpers')
+const { getUserByEmail, getURLByUserId} = require('./helpers')
 
 //homepage
 app.get("/", (req, res) => {
@@ -56,8 +62,9 @@ app.get("/urls", (req, res) => {
     res.redirect("/register");
     return
   } 
+  const varDatabase = getURLByUserId(userId, urlDatabase)
   
-  const templateVars = { urls: urlDatabase, username: usersDatabase[userId].email};
+  const templateVars = { urls: varDatabase, username: usersDatabase[userId].email};
   res.render("urls_index", templateVars);
 });
 
@@ -87,20 +94,25 @@ const username = req.session.id
 
 //show url associated w/ shortURL
 app.get("/urls/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL]
+  const userId = req.session.id
+  
+  const varDatabase = getURLByUserId(userId, urlDatabase)
+  
+  const longURL = varDatabase[req.params.shortURL]
   const shortURL = req.params.shortURL
-  const username = req.session.id
-  const templateVars = { shortURL: shortURL, longURL: longURL, username: username};
+  const templateVars = { shortURL: shortURL, longURL: longURL, username: userId};
   res.render("urls_show", templateVars);
 });
 
 //post to create new short url
 app.post("/urls", (req, res) => {
+  const userId = req.session.id
 
+  const newURL = { userId : userId, longURL : req.body.longURL};
 
   const shortURL = generateRandomString(6);
   // console.log(req.body);
-  urlDatabase[shortURL] = req.body.longURL  // Log the POST request body to the console
+  urlDatabase[shortURL] = newURL // Log the POST request body to the console
   res.redirect(`/urls/${shortURL}`)
 });
 
@@ -152,17 +164,20 @@ res.redirect(`/urls`)
 // post logout
 app.post("/logout", (req, res) => {
   // const username = req.body.username
-  res.clearCookie("id") 
+  // res.clearCookie("id") 
+  req.session = null;
   res.redirect('/login')
 });
  
 // edit / POST / urls/shortURL
 app.post("/urls/:shortURL/edit", (req, res) => {
+  const userId = req.session.id
   const shortURL = req.params.shortURL;
   const longURL = req.body.longURL;
-  // console.log(longURL);
-  // console.log("req body", req.body);
-  urlDatabase[shortURL] = longURL;
+  
+  const editURL = { userId: userId, longURL: longURL}
+
+  urlDatabase[shortURL] = editURL;
   res.redirect('/urls');
 })
 
@@ -176,7 +191,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   if (!longURL) {
     res.status(404).send("Error 404: Page Not Found")
   } else {
