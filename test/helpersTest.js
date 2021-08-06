@@ -1,6 +1,6 @@
 const { assert } = require('chai');
 
-const getUserByEmail  = require('../helpers.js');
+const { getUserByEmail } = require('../helpers.js');
 
 const testUsers = {
   "userRandomID": {
@@ -19,7 +19,7 @@ describe('getUserByEmail', function() {
   it('should return a user with valid email', function() {
     const user = getUserByEmail("user@example.com", testUsers)
     const expectedOutput = "userRandomID";
-    assert.equal(user, expectedOutput)
+    assert.equal(user["id"], expectedOutput)
   });
   it('should return undefined with invalid email', function() {
     const user = getUserByEmail("a@a.com", testUsers)

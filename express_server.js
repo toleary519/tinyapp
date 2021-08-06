@@ -17,9 +17,6 @@ app.use(cookieSession({
 }))
 app.set("view engine", "ejs");
 
-// string generator
-const generateRandomString = () => Math.random().toString(32).substr(2,6);
-
 //starting url database
 const urlDatabase = {
   "b2xVn2": {
@@ -45,8 +42,8 @@ const usersDatabase = {
   }
 }
 
-// finder fn
-const { getUserByEmail, getURLByUserId} = require('./helpers')
+// helper functions
+const { getUserByEmail, getURLByUserId, generateRandomString} = require('./helpers')
 
 //homepage
 app.get("/", (req, res) => {
@@ -57,7 +54,6 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   
   const userId = req.session.id;
-  // console.log("req.cookies", req.cookies);
   if (!userId) {
     res.redirect("/register");
     return
@@ -82,13 +78,13 @@ app.get("/login", (req, res) => {
 
 //new urls
 app.get("/urls/new", (req, res) => {
-const username = req.session.id
+  const userId = req.session.id
 
-  if (!username) {
+  if (!userId) {
     res.redirect("/login");
     return
   } 
-  const templateVars = {username: username.email};
+  const templateVars = {username: userId};
   res.render("urls_new", templateVars);
 });
 
@@ -101,6 +97,7 @@ app.get("/urls/:shortURL", (req, res) => {
   const longURL = varDatabase[req.params.shortURL]
   const shortURL = req.params.shortURL
   const templateVars = { shortURL: shortURL, longURL: longURL, username: userId};
+  
   res.render("urls_show", templateVars);
 });
 
@@ -111,8 +108,8 @@ app.post("/urls", (req, res) => {
   const newURL = { userId : userId, longURL : req.body.longURL};
 
   const shortURL = generateRandomString(6);
-  // console.log(req.body);
-  urlDatabase[shortURL] = newURL // Log the POST request body to the console
+  urlDatabase[shortURL] = newURL 
+
   res.redirect(`/urls/${shortURL}`)
 });
 
@@ -120,13 +117,10 @@ app.post("/urls", (req, res) => {
 app.post("/login", (req, res) => {
 
   const email = req.body.email 
-  console.log("email", req.body);
   const password = req.body.password 
   const hashedPassword = bcrypt.hashSync(password, 10)
   const user = getUserByEmail(email, usersDatabase);
-  console.log("user", user);
-  console.log("login user.id:", user.id);
-  console.log("user.password", user.password);
+  
   if (!user || !bcrypt.compareSync(password, hashedPassword)) {
     return res.status(400).send("invalid login <a href='/login'> try again</a>");
   }
@@ -150,21 +144,18 @@ app.post("/register", (req, res) => {
   }
   
   const userId = generateRandomString(6)
-  const user = {userId, email, password} //bcrypt before pass
+  const user = {userId, email, password} 
   usersDatabase[userId] = user;
 
   usersDatabase[userId] = { id: userId, email: email, password: hashedPassword };
   
 req.session.id = userId;
-console.log("user object:", usersDatabase[userId]);
-console.log("cookie:", userId, email );
+
 res.redirect(`/urls`)
 });
 
 // post logout
 app.post("/logout", (req, res) => {
-  // const username = req.body.username
-  // res.clearCookie("id") 
   req.session = null;
   res.redirect('/login')
 });
@@ -176,15 +167,14 @@ app.post("/urls/:shortURL/edit", (req, res) => {
   const longURL = req.body.longURL;
   
   const editURL = { userId: userId, longURL: longURL}
-
   urlDatabase[shortURL] = editURL;
+  
   res.redirect('/urls');
 })
 
 // delete url
 app.post('/urls/:shortURL/delete', (req, res) => {
   const shortURL = req.params.shortURL
-
   delete urlDatabase[shortURL];
 
   res.redirect('/urls');

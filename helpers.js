@@ -25,7 +25,9 @@ const getURLByUserId = function(userId, urlDatabase) {
   return filteredData; 
 }
 
-module.exports = {getUserByEmail, getURLByUserId}; 
+const generateRandomString = () => Math.random().toString(32).substr(2,6);
+
+module.exports = {getUserByEmail, getURLByUserId, generateRandomString}; 
 
 
 
