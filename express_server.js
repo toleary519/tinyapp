@@ -40,14 +40,7 @@ const usersDatabase = {
 }
 
 // finder fn
-const getUserByEmail = function(email) {
-  const users = Object.values(usersDatabase);
-  for (const user of users) {
-    if(user.email === email) {
-      return user;
-    }
-  }
-}
+const getUserByEmail = require('./helpers')
 
 //homepage
 app.get("/", (req, res) => {
@@ -70,7 +63,7 @@ app.get("/urls", (req, res) => {
 
 //register
 app.get("/register", (req, res) => {
-  const templateVars = {username: req.cookies["username"]}; 
+  const templateVars = {username: req.session.id}; 
   res.render("registration", templateVars);
 });
 
@@ -82,13 +75,13 @@ app.get("/login", (req, res) => {
 
 //new urls
 app.get("/urls/new", (req, res) => {
-const username = usersDatabase[req.cookies["id"]]
+const username = req.session.id
 
   if (!username) {
     res.redirect("/register");
     return
   } 
-  const templateVars = {username: username};
+  const templateVars = {username: username.email};
   res.render("urls_new", templateVars);
 });
 
@@ -118,7 +111,7 @@ app.post("/login", (req, res) => {
   console.log("email", req.body);
   const password = req.body.password 
   const hashedPassword = bcrypt.hashSync(password, 10)
-  const user = getUserByEmail(email);
+  const user = getUserByEmail(email, usersDatabase);
   console.log("user", user);
   console.log("login user.id:", user.id);
   console.log("user.password", user.password);
@@ -135,7 +128,7 @@ app.post("/register", (req, res) => {
   const email = req.body.email 
   const password = req.body.password 
   const hashedPassword = bcrypt.hashSync(password, 10)
-  if (getUserByEmail(email)) {
+  if (getUserByEmail(email, usersDatabase)) {
     res.status(400).send("Email taken. <a href='/register'> try again </> ");
   }
 
@@ -182,14 +175,10 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   res.redirect('/urls');
 });
 
-app.get("/error", (req, res) => {
-  res.send("Error 404");
-});
-
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   if (!longURL) {
-    res.send("Error 404: Page Not Found")
+    res.status(404).send("Error 404: Page Not Found")
   } else {
     res.redirect(longURL);
   }
