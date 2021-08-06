@@ -78,7 +78,7 @@ app.get("/urls/new", (req, res) => {
 const username = req.session.id
 
   if (!username) {
-    res.redirect("/register");
+    res.redirect("/login");
     return
   } 
   const templateVars = {username: username.email};
