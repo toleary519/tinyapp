@@ -46,19 +46,18 @@ const { getUserByEmail, getURLByUserId, generateRandomString} = require('./helpe
 
 //homepage
 app.get("/", (req, res) => {
-  res.render("homepage");
+  res.redirect("/urls");
 });
 
 //urls
 app.get("/urls", (req, res) => {
-  
   const userId = req.session.id;
-  if (!userId) {
-    res.redirect("/register");
-    return;
-  }
-  const varDatabase = getURLByUserId(userId, urlDatabase);
   
+  if (!userId) {
+    return res.status(400).send("you must be logged in <a href='/login'> try again</a>");
+  }
+  
+  const varDatabase = getURLByUserId(userId, urlDatabase);
   const templateVars = { urls: varDatabase, username: usersDatabase[userId].email};
   res.render("urls_index", templateVars);
 });
@@ -80,22 +79,31 @@ app.get("/urls/new", (req, res) => {
   const userId = req.session.id;
 
   if (!userId) {
-    res.redirect("/login");
-    return;
+    return res.status(400).send("you must be logged in <a href='/login'> try again</a>");
   }
-  const templateVars = {username: userId};
+  const templateVars = {username: usersDatabase[userId].email};
   res.render("urls_new", templateVars);
 });
 
 //show url associated w/ shortURL
 app.get("/urls/:shortURL", (req, res) => {
   const userId = req.session.id;
-  
+  const shortURL = req.params.shortURL;
+
+  if (!userId) {
+    return res.status(400).send("you must be logged in <a href='/login'> try again</a>");
+  }
+
+  if (urlDatabase[shortURL].userId !== userId) {
+    return res.status(403).send("Access Denied <a href='/login'> try again</a>");
+  }
+
+
   const varDatabase = getURLByUserId(userId, urlDatabase);
   
   const longURL = varDatabase[req.params.shortURL];
-  const shortURL = req.params.shortURL;
-  const templateVars = { shortURL: shortURL, longURL: longURL, username: userId};
+  
+  const templateVars = { shortURL: shortURL, longURL: longURL, username: usersDatabase[userId].email};
   
   res.render("urls_show", templateVars);
 });
@@ -103,6 +111,10 @@ app.get("/urls/:shortURL", (req, res) => {
 //post to create new short url
 app.post("/urls", (req, res) => {
   const userId = req.session.id;
+
+  if (!userId) {
+    return res.status(400).send("you must be logged in <a href='/login'> try again</a>");
+  }
 
   const newURL = { userId : userId, longURL : req.body.longURL};
 
@@ -117,10 +129,9 @@ app.post("/login", (req, res) => {
 
   const email = req.body.email;
   const password = req.body.password;
-  const hashedPassword = bcrypt.hashSync(password, 10);
   const user = getUserByEmail(email, usersDatabase);
-  
-  if (!user || !bcrypt.compareSync(password, hashedPassword)) {
+  const testPassword = user.password;
+  if (!user || !bcrypt.compareSync(password, testPassword)) {
     return res.status(400).send("invalid login <a href='/login'> try again</a>");
   }
   req.session.id = user.id;
@@ -161,10 +172,18 @@ app.post("/logout", (req, res) => {
  
 // edit / POST / urls/shortURL
 app.post("/urls/:shortURL/edit", (req, res) => {
+  
   const userId = req.session.id;
   const shortURL = req.params.shortURL;
-  const longURL = req.body.longURL;
   
+  if (!userId) {
+    return res.status(400).send("you must be logged in <a href='/login'> try again</a>");
+  }
+  if (urlDatabase[shortURL].userId !== userId) {
+    return res.status(403).send("Access Denied <a href='/login'> try again</a>");
+  }
+  
+  const longURL = req.body.longURL;
   const editURL = { userId: userId, longURL: longURL};
   urlDatabase[shortURL] = editURL;
   
@@ -173,7 +192,17 @@ app.post("/urls/:shortURL/edit", (req, res) => {
 
 // delete url
 app.post('/urls/:shortURL/delete', (req, res) => {
+  const userId = req.session.id;
   const shortURL = req.params.shortURL;
+  
+  if (!userId) {
+    return res.status(400).send("you must be logged in <a href='/login'> try again</a>");
+  }
+  
+  if (urlDatabase[shortURL].userId !== userId) {
+    return res.status(403).send("Access Denied <a href='/login'> try again</a>");
+  }
+
   delete urlDatabase[shortURL];
 
   res.redirect('/urls');
