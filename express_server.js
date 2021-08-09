@@ -90,6 +90,10 @@ app.get("/urls/:shortURL", (req, res) => {
   const userId = req.session.id;
   const shortURL = req.params.shortURL;
 
+  if (!urlDatabase[shortURL]) {
+    return res.status(404).send("404 PAGE NOT FOUND");
+  }
+
   if (!userId) {
     return res.status(400).send("you must be logged in <a href='/login'> try again</a>");
   }
@@ -209,7 +213,13 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL].longURL;
+  const shortURL = req.params.shortURL
+  
+  if (!urlDatabase[shortURL]) {
+    return res.status(404).send("404 PAGE NOT FOUND");
+  }
+  
+  const longURL = urlDatabase[shortURL].longURL;
   if (!longURL) {
     res.status(404).send("Error 404: Page Not Found");
   } else {
