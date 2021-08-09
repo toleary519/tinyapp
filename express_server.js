@@ -102,11 +102,8 @@ app.get("/urls/:shortURL", (req, res) => {
     return res.status(403).send("Access Denied <a href='/login'> try again</a>");
   }
 
-
   const varDatabase = getURLByUserId(userId, urlDatabase);
-  
   const longURL = varDatabase[req.params.shortURL];
-  
   const templateVars = { shortURL: shortURL, longURL: longURL, username: usersDatabase[userId].email};
   
   res.render("urls_show", templateVars);
@@ -121,7 +118,6 @@ app.post("/urls", (req, res) => {
   }
 
   const newURL = { userId : userId, longURL : req.body.longURL};
-
   const shortURL = generateRandomString(6);
   urlDatabase[shortURL] = newURL;
 
@@ -139,8 +135,8 @@ app.post("/login", (req, res) => {
     return res.status(400).send("invalid login <a href='/login'> try again</a>");
   }
   req.session.id = user.id;
+  
   res.redirect('/urls');
-
 });
 
 // post register
@@ -148,10 +144,10 @@ app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(password, 10);
+  
   if (getUserByEmail(email, usersDatabase)) {
     res.status(400).send("Email taken. <a href='/register'> try again </> ");
   }
-
   if (!email || !password) {
     res.status(400).send("Missing email or Password. <a href='/register'> try again </> ");
     return;
@@ -160,9 +156,7 @@ app.post("/register", (req, res) => {
   const userId = generateRandomString(6);
   const user = {userId, email, password};
   usersDatabase[userId] = user;
-
   usersDatabase[userId] = { id: userId, email: email, password: hashedPassword };
-  
   req.session.id = userId;
 
   res.redirect(`/urls`);
@@ -176,7 +170,6 @@ app.post("/logout", (req, res) => {
  
 // edit / POST / urls/shortURL
 app.post("/urls/:shortURL/edit", (req, res) => {
-  
   const userId = req.session.id;
   const shortURL = req.params.shortURL;
   
@@ -220,6 +213,7 @@ app.get("/u/:shortURL", (req, res) => {
   }
   
   const longURL = urlDatabase[shortURL].longURL;
+  
   if (!longURL) {
     res.status(404).send("Error 404: Page Not Found");
   } else {
