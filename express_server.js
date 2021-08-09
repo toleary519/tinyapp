@@ -167,7 +167,7 @@ app.post("/register", (req, res) => {
 // post logout
 app.post("/logout", (req, res) => {
   req.session = null;
-  res.redirect('/login');
+  res.redirect('/urls');
 });
  
 // edit / POST / urls/shortURL
