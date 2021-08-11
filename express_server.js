@@ -46,7 +46,7 @@ const { getUserByEmail, getURLByUserId, generateRandomString} = require('./helpe
 
 //homepage
 app.get("/", (req, res) => {
-  res.redirect("/urls");
+  res.redirect("/login");
 });
 
 //urls
@@ -99,7 +99,7 @@ app.get("/urls/:shortURL", (req, res) => {
   }
 
   if (urlDatabase[shortURL].userId !== userId) {
-    return res.status(403).send("Access Denied <a href='/login'> try again</a>");
+    return res.status(403).send("Access Denied <a href='/urls'> try again</a>");
   }
 
   const varDatabase = getURLByUserId(userId, urlDatabase);
@@ -128,6 +128,9 @@ app.post("/urls", (req, res) => {
 app.post("/login", (req, res) => {
 
   const email = req.body.email;
+  if (!email) {
+    return res.status(400).send("invalid email <a href='/login'> try again</a>");
+  }
   const password = req.body.password;
   const user = getUserByEmail(email, usersDatabase);
   const testPassword = user.password;
@@ -177,7 +180,7 @@ app.post("/urls/:shortURL/edit", (req, res) => {
     return res.status(400).send("you must be logged in <a href='/login'> try again</a>");
   }
   if (urlDatabase[shortURL].userId !== userId) {
-    return res.status(403).send("Access Denied <a href='/login'> try again</a>");
+    return res.status(403).send("Access Denied <a href='/urls'> try again</a>");
   }
   
   const longURL = req.body.longURL;
