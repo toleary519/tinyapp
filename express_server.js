@@ -17,29 +17,9 @@ app.use(cookieSession({
 app.set("view engine", "ejs");
 
 //starting url database
-const urlDatabase = {
-  "b2xVn2": {
-    longURL: "http://www.lighthouselabs.ca",
-    userId: "userRandomID"
-  },
-  "9sm5xK": {
-    longURL: "http://www.google.com",
-    userId: "user2RandomID"
-  }
-};
+const urlDatabase = {};
 // user database
-const usersDatabase = {
-  "userRandomID": {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "test"
-  },
-  "user2RandomID": {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk"
-  }
-};
+const usersDatabase = {};
 
 // helper functions
 const { getUserByEmail, getURLByUserId, generateRandomString} = require('./helpers');
